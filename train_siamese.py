@@ -15,8 +15,6 @@ import random
 import theano
 import theano.tensor as T
 
-margin = 1
-
 
 # loss basata su distanza
 # DOPO  per classificare o nearest neighbour o K-means con K=2
@@ -28,7 +26,7 @@ def my_siamese_loss(y_true, y_pred):
     y_dispari= y_true[1::2]
     d=T.square(v_pari-v_dispari)
     l=T.sum(d,axis=1)
-    loss=T.mean(y_pari * d + (1-y_pari)*T.maximum(margin-d,0))
+    loss=T.mean(T.transpose(y_pari) * l + T.transpose(1-y_pari)*T.maximum(margin-l,0))
 
     return loss
 
@@ -40,10 +38,10 @@ def coupling_dataset(ds_set, label, num_couple):
     male = ds_set[label==1]
     female = ds_set[label==-1]
 
-    shape = ds_set.shape
+    shape = list(ds_set.shape)
     shape[0] = num_couple
     new_set = numpy.empty(shape=shape)
-    shape = label.shape
+    shape = list(label.shape)
     shape[0] = num_couple
     new_lab = numpy.empty(shape=shape)
 
@@ -57,13 +55,12 @@ def coupling_dataset(ds_set, label, num_couple):
         new_set[i+1,:,:,:] = ds_set[i2,:,:,:]
 
         lab = int(label[i1] == label[i2])
-        new_lab[i,:] = lab
-        new_lab[i,:] = lab
+        new_lab[i] = lab
+        new_lab[i+1] = lab
 
     return new_set, new_lab
 
 
-random.seed(12345)
 
 
 video_directory = "/home/cla/Downloads/CMD/CMD/CMD"
@@ -89,22 +86,23 @@ def load_pkl_video(dir):
 def load_train_samples(x, y, dirs, maxsize=None):
     for d in random.sample(dirs,len(dirs)):
             (new_img, new_labels) = load_pkl_video(d)
-            corrected_labels = map(lambda x: 0 if x < 0 else x, new_labels)
-            labels = np_utils.to_categorical(corrected_labels, nb_classes)
-            y = numpy.vstack([y, labels])
+            # corrected_labels = map(lambda x: 0 if x < 0 else x, new_labels)
+            # labels = np_utils.to_categorical(corrected_labels, nb_classes)
+            # y = numpy.vstack([y, labels])
+            y = numpy.append(y, new_labels)
             x = numpy.vstack([x, new_img])
             if maxsize and y.shape[0] > maxsize:
                 break
     return (x,y)
 
+random.seed(2134)
 random.shuffle(directory_list)
 
-val_list= directory_list[15:]
-train_list = directory_list[:15]
+val_list= directory_list[16:]
+train_list = directory_list[:16]
 # train_list = directory_list
 
-#cambio il seed per caricare gli esempi in modi diversi
-random.seed(56323)
+margin = 1
 
 batch_size = 32
 # nb_classes = 1
@@ -122,20 +120,19 @@ img_channels = 3
 # Y_train = np_utils.to_categorical(y_train, nb_classes)
 # Y_test = np_utils.to_categorical(y_test, nb_classes)
 X_test = numpy.empty([0, 3, 128, 48], dtype='float32')
-Y_test = numpy.empty([0, 2])
+Y_test = numpy.empty([0, 1])
 X_train = numpy.empty([0, 3, 128, 48], dtype='float32')
-Y_train = numpy.empty([0, 2])
+Y_train = numpy.empty([0, 1])
 (X_test, Y_test) = load_train_samples(X_test,Y_test, val_list)
-
+X_test, Y_test = coupling_dataset(X_test, Y_test, 25000)
 
 
 # model_name = 'my_model_architecture.json'
 # model_weights = 'my_model_weights.h5'
-# # model_weights = None
 #
-# model = model_from_json(open(model_name).read())
+# m = model_from_json(open(model_name).read())
 # if model_weights:
-#     model.load_weights(model_weights)
+#     m.load_weights(model_weights)
 
 
 m = Sequential()
@@ -171,13 +168,9 @@ m.add(Activation('relu'))
 last_layer = 32
 m.add(Dense(last_layer))
 m.add(Activation('relu'))
-#m.add(Dropout(0.5))
+# #m.add(Dropout(0.5))
 
-# remove last layer
-#model = siamese.build_siamese(m, m, last_layer, nb_classes)
-
-#model.load_weights('my_model_weights.h5')
-
+m.load_weights("my_model_weights.h5")
 
 earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
 
@@ -189,28 +182,39 @@ if not data_augmentation:
     print('Not using data augmentation.')
 
 
-X_test, Y_test = coupling_dataset(X_test, Y_test, X_test.shape[0]*2)
+#cambio il seed per caricare gli esempi in modi diversi
+random.seed(45907)
 
-for i in range(1,10):
-    if Y_train.shape[0] < 30000:
-        (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, 30000)
-    else:
-        X_train = X_train[20000:, :]
-        Y_train = Y_train[20000:, :]
-        (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, 30000)
+trainsize = 15000
+discardfrom = 12000
+couples = 15000
 
-    X_train, Y_train = coupling_dataset(X_train, Y_train, 30000)
+# for i in range(1,10):
+#     if Y_train.shape[0] < trainsize:
+#         (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
+#     else:
+#         # X_train = X_train[discardfrom:, :]
+#         # Y_train = Y_train[discardfrom:, :]
+#         X_train = X_train[discardfrom:, :]
+#         Y_train = Y_train[discardfrom:]
+#         (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
+#
+#     X_train, Y_train = coupling_dataset(X_train, Y_train, couples)
+#
+#     m.fit(X_train, Y_train, batch_size=batch_size,
+#           nb_epoch=nb_epoch, show_accuracy=True,
+#           validation_data=(X_test, Y_test), shuffle=False
+#           # ,callbacks=[earlyStopping]
+#           )
 
-    m.fit(X_train, Y_train, batch_size=batch_size,
-          nb_epoch=nb_epoch, show_accuracy=True,
-          validation_data=(X_test, Y_test), shuffle=True
-          # ,callbacks=[earlyStopping]
-          )
+(X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
+X_train, Y_train = coupling_dataset(X_train, Y_train, couples)
 
-
-
-
-
+m.fit(X_train, Y_train, batch_size=batch_size,
+      nb_epoch=nb_epoch, show_accuracy=True,
+      validation_data=(X_test, Y_test), shuffle=False
+      # ,callbacks=[earlyStopping]
+      )
 
 json_string = m.to_json()
 open('my_model_architecture.json', 'w').write(json_string)
