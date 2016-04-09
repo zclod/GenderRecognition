@@ -14,6 +14,7 @@ import random
 #import keras.backend as T
 import theano
 import theano.tensor as T
+from siamese_model import build_model
 
 
 # loss basata su distanza
@@ -135,48 +136,49 @@ X_test, Y_test = coupling_dataset(X_test, Y_test, 25000)
 #     m.load_weights(model_weights)
 
 
-m = Sequential()
+# m = Sequential()
 
-m.add(Convolution2D(32, 5, 5, border_mode='valid',
-                        input_shape=(img_channels, img_rows, img_cols)))
-m.add(Activation('relu'))
-m.add(Convolution2D(32, 5, 5))
-m.add(Activation('relu'))
-m.add(MaxPooling2D(pool_size=(2, 2)))
-# m.add(ZeroPadding2D(padding=(1, 1), dim_ordering='th'))
-m.add(Dropout(0.25))
+# m.add(Convolution2D(32, 5, 5, border_mode='valid',
+#                         input_shape=(img_channels, img_rows, img_cols)))
+# m.add(Activation('relu'))
+# m.add(Convolution2D(32, 5, 5))
+# m.add(Activation('relu'))
+# m.add(MaxPooling2D(pool_size=(2, 2)))
+# # m.add(ZeroPadding2D(padding=(1, 1), dim_ordering='th'))
+# m.add(Dropout(0.25))
 
-m.add(Convolution2D(64, 3, 3, border_mode='same'))
-m.add(Activation('relu'))
-m.add(Convolution2D(64, 3, 3))
-m.add(Activation('relu'))
-m.add(MaxPooling2D(pool_size=(2, 2)))
-m.add(Dropout(0.25))
+# m.add(Convolution2D(64, 3, 3, border_mode='same'))
+# m.add(Activation('relu'))
+# m.add(Convolution2D(64, 3, 3))
+# m.add(Activation('relu'))
+# m.add(MaxPooling2D(pool_size=(2, 2)))
+# m.add(Dropout(0.25))
 
-m.add(Convolution2D(128, 3, 3, border_mode='same'))
-m.add(Activation('relu'))
-m.add(Convolution2D(128, 3, 3))
-m.add(Activation('relu'))
-m.add(MaxPooling2D(pool_size=(2, 2)))
-m.add(Dropout(0.25))
+# m.add(Convolution2D(128, 3, 3, border_mode='same'))
+# m.add(Activation('relu'))
+# m.add(Convolution2D(128, 3, 3))
+# m.add(Activation('relu'))
+# m.add(MaxPooling2D(pool_size=(2, 2)))
+# m.add(Dropout(0.25))
 
-m.add(Flatten())
-m.add(Dense(64))
-m.add(Activation('relu'))
-#m.add(Dropout(0.5))
-
-last_layer = 32
-m.add(Dense(last_layer))
-m.add(Activation('relu'))
+# m.add(Flatten())
+# m.add(Dense(64))
+# m.add(Activation('relu'))
 # #m.add(Dropout(0.5))
 
-m.load_weights("my_model_weights.h5")
+# last_layer = 32
+# m.add(Dense(last_layer))
+# m.add(Activation('relu'))
+# # #m.add(Dropout(0.5))
 
-earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
+# m.load_weights("my_model_weights.h5")
 
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-m.compile(loss=my_siamese_loss, optimizer=sgd)
+# earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
 
+# sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+# m.compile(loss=my_siamese_loss, optimizer=sgd)
+
+m = build_model((img_channels, img_rows, img_cols))
 
 if not data_augmentation:
     print('Not using data augmentation.')
