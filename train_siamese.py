@@ -103,14 +103,12 @@ val_list= directory_list[16:]
 train_list = directory_list[:16]
 # train_list = directory_list
 
-margin = 1
+margin = 100
 
-batch_size = 32
+batch_size = 128
 # nb_classes = 1
 nb_classes = 2
 nb_epoch = 1
-
-data_augmentation = False
 
 # input image dimensions
 img_rows, img_cols = 128, 48
@@ -124,16 +122,8 @@ X_test = numpy.empty([0, 3, 128, 48], dtype='float32')
 Y_test = numpy.empty([0, 1])
 X_train = numpy.empty([0, 3, 128, 48], dtype='float32')
 Y_train = numpy.empty([0, 1])
-(X_test, Y_test) = load_train_samples(X_test,Y_test, val_list)
-X_test, Y_test = coupling_dataset(X_test, Y_test, 25000)
-
-
-# model_name = 'my_model_architecture.json'
-# model_weights = 'my_model_weights.h5'
-#
-# m = model_from_json(open(model_name).read())
-# if model_weights:
-#     m.load_weights(model_weights)
+(X_test, Y_test) = load_train_samples(X_test,Y_test, val_list, 1024)
+X_test, Y_test = coupling_dataset(X_test, Y_test, 1024)
 
 
 # m = Sequential()
@@ -180,16 +170,11 @@ X_test, Y_test = coupling_dataset(X_test, Y_test, 25000)
 
 m = build_model((img_channels, img_rows, img_cols))
 
-if not data_augmentation:
-    print('Not using data augmentation.')
-
-
 #cambio il seed per caricare gli esempi in modi diversi
 random.seed(45907)
 
-trainsize = 15000
-discardfrom = 12000
-couples = 15000
+trainsize = 2000
+couples = 1024
 
 # for i in range(1,10):
 #     if Y_train.shape[0] < trainsize:
@@ -209,17 +194,22 @@ couples = 15000
 #           # ,callbacks=[earlyStopping]
 #           )
 
-(X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
-X_train, Y_train = coupling_dataset(X_train, Y_train, couples)
-
-m.fit(X_train, Y_train, batch_size=batch_size,
+x_pred = numpy.empty([0, 3, 128, 48], dtype='float32')
+y_pred = numpy.empty([0, 1])
+x_pred, _ = load_train_samples(x_pred, y_pred, val_list, 512)
+for i in range(1,10):
+    X_train = numpy.empty([0, 3, 128, 48], dtype='float32')
+    Y_train = numpy.empty([0, 1])
+    (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
+    X_train, Y_train = coupling_dataset(X_train, Y_train, couples)
+    m.fit(X_train, Y_train, batch_size=batch_size,
       nb_epoch=nb_epoch, show_accuracy=True,
       validation_data=(X_test, Y_test), shuffle=False
       # ,callbacks=[earlyStopping]
       )
+    predictions = m.predict(x_pred)
 
-json_string = m.to_json()
-open('my_model_architecture.json', 'w').write(json_string)
+
 m.save_weights('my_model_weights.h5'
                    , overwrite=True
                    )

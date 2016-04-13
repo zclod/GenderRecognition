@@ -28,47 +28,48 @@ def my_siamese_loss(y_true, y_pred):
     return loss
 
 margin = 1
-weights_path = "my_model_weights.h5"
+# weights_path = "my_model_weights.h5"
 
-def build_model(input_shape, weights=weights_path):
+def build_model(input_shape, weights=None):
     m = Sequential()
 
     m.add(Convolution2D(32, 5, 5, border_mode='valid',
                             input_shape=input_shape))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     m.add(Convolution2D(32, 5, 5))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     m.add(MaxPooling2D(pool_size=(2, 2)))
     # m.add(ZeroPadding2D(padding=(1, 1), dim_ordering='th'))
     m.add(Dropout(0.25))
 
     m.add(Convolution2D(64, 3, 3, border_mode='same'))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     m.add(Convolution2D(64, 3, 3))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     m.add(MaxPooling2D(pool_size=(2, 2)))
     m.add(Dropout(0.25))
 
     m.add(Convolution2D(128, 3, 3, border_mode='same'))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     m.add(Convolution2D(128, 3, 3))
-    m.add(Activation('relu'))
+    m.add(Activation('sigmoid'))
     m.add(MaxPooling2D(pool_size=(2, 2)))
     m.add(Dropout(0.25))
 
     m.add(Flatten())
     m.add(Dense(64))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     #m.add(Dropout(0.5))
 
     last_layer = 32
     m.add(Dense(last_layer))
-    m.add(Activation('relu'))
+    # m.add(Activation('relu'))
     # #m.add(Dropout(0.5))
 
-    m.load_weights("my_model_weights.h5")
+    if weights:
+        m.load_weights(weights)
 
-    earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
+    # earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
     m.compile(loss=my_siamese_loss, optimizer=sgd)
