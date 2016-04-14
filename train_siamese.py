@@ -96,7 +96,7 @@ def load_train_samples(x, y, dirs, maxsize=None):
                 break
     return (x,y)
 
-random.seed(2134)
+random.seed(22134)
 random.shuffle(directory_list)
 
 val_list= directory_list[16:]
@@ -126,48 +126,6 @@ Y_train = numpy.empty([0, 1])
 X_test, Y_test = coupling_dataset(X_test, Y_test, 1024)
 
 
-# m = Sequential()
-
-# m.add(Convolution2D(32, 5, 5, border_mode='valid',
-#                         input_shape=(img_channels, img_rows, img_cols)))
-# m.add(Activation('relu'))
-# m.add(Convolution2D(32, 5, 5))
-# m.add(Activation('relu'))
-# m.add(MaxPooling2D(pool_size=(2, 2)))
-# # m.add(ZeroPadding2D(padding=(1, 1), dim_ordering='th'))
-# m.add(Dropout(0.25))
-
-# m.add(Convolution2D(64, 3, 3, border_mode='same'))
-# m.add(Activation('relu'))
-# m.add(Convolution2D(64, 3, 3))
-# m.add(Activation('relu'))
-# m.add(MaxPooling2D(pool_size=(2, 2)))
-# m.add(Dropout(0.25))
-
-# m.add(Convolution2D(128, 3, 3, border_mode='same'))
-# m.add(Activation('relu'))
-# m.add(Convolution2D(128, 3, 3))
-# m.add(Activation('relu'))
-# m.add(MaxPooling2D(pool_size=(2, 2)))
-# m.add(Dropout(0.25))
-
-# m.add(Flatten())
-# m.add(Dense(64))
-# m.add(Activation('relu'))
-# #m.add(Dropout(0.5))
-
-# last_layer = 32
-# m.add(Dense(last_layer))
-# m.add(Activation('relu'))
-# # #m.add(Dropout(0.5))
-
-# m.load_weights("my_model_weights.h5")
-
-# earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
-
-# sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-# m.compile(loss=my_siamese_loss, optimizer=sgd)
-
 m = build_model((img_channels, img_rows, img_cols))
 
 #cambio il seed per caricare gli esempi in modi diversi
@@ -175,24 +133,6 @@ random.seed(45907)
 
 trainsize = 2000
 couples = 1024
-
-# for i in range(1,10):
-#     if Y_train.shape[0] < trainsize:
-#         (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
-#     else:
-#         # X_train = X_train[discardfrom:, :]
-#         # Y_train = Y_train[discardfrom:, :]
-#         X_train = X_train[discardfrom:, :]
-#         Y_train = Y_train[discardfrom:]
-#         (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
-#
-#     X_train, Y_train = coupling_dataset(X_train, Y_train, couples)
-#
-#     m.fit(X_train, Y_train, batch_size=batch_size,
-#           nb_epoch=nb_epoch, show_accuracy=True,
-#           validation_data=(X_test, Y_test), shuffle=False
-#           # ,callbacks=[earlyStopping]
-#           )
 
 x_pred = numpy.empty([0, 3, 128, 48], dtype='float32')
 y_pred = numpy.empty([0, 1])
