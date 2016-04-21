@@ -103,7 +103,7 @@ val_list= directory_list[16:]
 train_list = directory_list[:16]
 # train_list = directory_list
 
-margin = 100
+margin = 1
 
 batch_size = 128
 # nb_classes = 1
@@ -126,10 +126,10 @@ Y_train = numpy.empty([0, 1])
 X_test, Y_test = coupling_dataset(X_test, Y_test, 1024)
 
 
-m = build_model((img_channels, img_rows, img_cols))
+m = build_model((img_channels, img_rows, img_cols), "my_model_weights.h5")
 
 #cambio il seed per caricare gli esempi in modi diversi
-random.seed(45907)
+random.seed(45)
 
 trainsize = 2000
 couples = 1024

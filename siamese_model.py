@@ -44,15 +44,15 @@ def build_model(input_shape, weights=None):
 
     m.add(Convolution2D(64, 3, 3, border_mode='same'))
     # m.add(Activation('relu'))
-    m.add(Convolution2D(64, 3, 3))
+    # m.add(Convolution2D(64, 3, 3))
     # m.add(Activation('relu'))
     m.add(MaxPooling2D(pool_size=(2, 2)))
     m.add(Dropout(0.25))
 
     m.add(Convolution2D(128, 3, 3, border_mode='same'))
     # m.add(Activation('relu'))
-    m.add(Convolution2D(128, 3, 3))
-    m.add(Activation('sigmoid'))
+    # m.add(Convolution2D(128, 3, 3))
+    m.add(Activation('tanh'))
     m.add(MaxPooling2D(pool_size=(2, 2)))
     m.add(Dropout(0.25))
 
@@ -63,7 +63,7 @@ def build_model(input_shape, weights=None):
 
     last_layer = 32
     m.add(Dense(last_layer))
-    # m.add(Activation('relu'))
+    m.add(Activation('softmax'))
     # #m.add(Dropout(0.5))
 
     if weights:
