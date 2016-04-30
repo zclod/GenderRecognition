@@ -16,5 +16,6 @@ def my_siamese_loss(y_true, y_pred):
     l = T.sqrt(T.sum(d, axis=1))
 
     loss = 0.5 * (T.transpose(y_pari) * T.sqr(l) + T.transpose(1-y_pari) * T.sqr(T.maximum(margin-l,0)))
+    loss = T.mean(loss)
 
     return loss
