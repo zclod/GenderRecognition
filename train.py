@@ -11,8 +11,8 @@ import os
 import VIPerDS
 import siamese
 import random
+from siamese_model import build_model
 
-random.seed(12345)
 
 video_directory = "/home/cla/Downloads/CMD/CMD/CMD"
 
@@ -37,12 +37,22 @@ def load_train_samples(x, y, dirs, maxsize=None):
             (new_img, new_labels) = load_pkl_video(d)
             corrected_labels = map(lambda x: 0 if x < 0 else x, new_labels)
             labels = np_utils.to_categorical(corrected_labels, nb_classes)
-            y = numpy.vstack([y, labels])
-            x = numpy.vstack([x, new_img])
+            if maxsize:
+                indexes = random.sample(range(0,len(new_labels)), min(1500 ,len(new_labels)))
+                yappend = labels[indexes,:]
+                xappend = new_img[indexes,:]
+                y = numpy.vstack([y, yappend])
+                x = numpy.vstack([x, xappend])
+            else:
+                y = numpy.vstack([y, labels])
+                x = numpy.vstack([x, new_img])
+
             if maxsize and y.shape[0] > maxsize:
                 break
     return (x,y)
 
+
+random.seed(1459)
 random.shuffle(directory_list)
 
 val_list= directory_list[15:]
@@ -50,7 +60,7 @@ train_list = directory_list[:15]
 # train_list = directory_list
 
 #cambio il seed per caricare gli esempi in modi diversi
-random.seed(56323)
+random.seed(5232363)
 
 batch_size = 32
 # nb_classes = 1
@@ -73,62 +83,7 @@ X_train = numpy.empty([0, 3, 128, 48], dtype='float32')
 Y_train = numpy.empty([0, 2])
 (X_test, Y_test) = load_train_samples(X_test,Y_test, val_list)
 
-
-# model_name = 'my_model_architecture.json'
-# model_weights = 'my_model_weights.h5'
-# # model_weights = None
-#
-# model = model_from_json(open(model_name).read())
-# if model_weights:
-#     model.load_weights(model_weights)
-
-
-m = Sequential()
-
-m.add(Convolution2D(32, 5, 5, border_mode='valid',
-                        input_shape=(img_channels, img_rows, img_cols)))
-m.add(Activation('relu'))
-m.add(Convolution2D(32, 5, 5))
-m.add(Activation('relu'))
-m.add(MaxPooling2D(pool_size=(2, 2)))
-# m.add(ZeroPadding2D(padding=(1, 1), dim_ordering='th'))
-m.add(Dropout(0.25))
-
-m.add(Convolution2D(64, 3, 3, border_mode='same'))
-m.add(Activation('relu'))
-m.add(Convolution2D(64, 3, 3))
-m.add(Activation('relu'))
-m.add(MaxPooling2D(pool_size=(2, 2)))
-m.add(Dropout(0.25))
-
-m.add(Convolution2D(128, 3, 3, border_mode='same'))
-m.add(Activation('relu'))
-m.add(Convolution2D(128, 3, 3))
-m.add(Activation('relu'))
-m.add(MaxPooling2D(pool_size=(2, 2)))
-m.add(Dropout(0.25))
-
-m.add(Flatten())
-m.add(Dense(64))
-m.add(Activation('relu'))
-m.add(Dropout(0.5))
-
-last_layer = 32
-m.add(Dense(last_layer))
-m.add(Activation('relu'))
-m.add(Dropout(0.5))
-
-# remove last layer
-model = siamese.build_siamese(m, m, last_layer, nb_classes)
-
-model.load_weights('my_model_weights.h5')
-
-
-earlyStopping = EarlyStopping(monitor='val_loss', patience=1, verbose=0, mode='min')
-
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy', optimizer=sgd)
-
+model = build_model((3,128,48), "my_model_weights.h5")
 
 if not data_augmentation:
     print('Not using data augmentation.')
@@ -150,15 +105,16 @@ datagen = ImageDataGenerator(
     vertical_flip=False)  # randomly flip images
 
 
-
+trainsize = 15000
+discardfrom = 8000
 
 for i in range(1,10):
-    if Y_train.shape[0] < 30000:
-        (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, 30000)
+    if Y_train.shape[0] < trainsize:
+        (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
     else:
-        X_train = X_train[20000:, :]
-        Y_train = Y_train[20000:, :]
-        (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, 30000)
+        X_train = X_train[discardfrom:, :]
+        Y_train = Y_train[discardfrom:, :]
+        (X_train, Y_train) = load_train_samples(X_train, Y_train, train_list, trainsize)
 
     if not data_augmentation:
         model.fit(X_train, Y_train, batch_size=batch_size,
@@ -188,8 +144,8 @@ for i in range(1,10):
 
 
 
-json_string = model.to_json()
-open('my_model_architecture.json', 'w').write(json_string)
+# json_string = model.to_json()
+# open('my_model_architecture.json', 'w').write(json_string)
 model.save_weights('my_model_weights.h5'
                    , overwrite=True
                    )
