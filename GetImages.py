@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import misc
 
-dataset_path = 'D:/PRML/DS/CMD/CMD/CMD/'
+dataset_path = '/home/cla/Downloads/CMD/CMD/CMD/'
 video_names = ['1airport1', '1chinacross2', '1chinacross4', '1dawei1', '1dawei5', '1grand1', '1grand3', '1japancross2',
               '1japancross3', '1manko3', '1manko29', '1shatian3', '1thu10', '2dawei1', '2grand6', '2jiansha5',
               '2manko2', '2niurunning2', '3shatian6', 'randomcross3']
@@ -15,7 +15,8 @@ def read_image(path):
 def get_id_images(sample_id, video_name):
 
     # load trajectories_BB.txt for a specific video
-    with open(dataset_path + video_name + '/labels.txt') as f:
+    # with open(dataset_path + video_name + '/labels.txt') as f:
+    with open(video_name + '/labels.txt') as f:
         # t = f.readlines()
         traj = np.loadtxt(f)
 
@@ -25,7 +26,8 @@ def get_id_images(sample_id, video_name):
 
     imgs = np.empty([0, 3, 128, 48], dtype='float32')
     for s in id_traj:
-        img = read_image(dataset_path + video_name + "/%06d.jpg" % s[0])
+        # img = read_image(dataset_path + video_name + "/%06d.jpg" % s[0])
+        img = read_image(video_name + "/%06d.jpg" % s[0])
 
         img = img[s[6]: s[6] + s[8], s[5]: s[5] + s[7], :]
 

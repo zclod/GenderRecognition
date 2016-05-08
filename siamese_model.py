@@ -3,17 +3,6 @@ from keras.models import Sequential, model_from_json
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD
-from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import np_utils
-from keras.callbacks import EarlyStopping
-import numpy
-import os
-import VIPerDS
-import siamese
-import random
-#import keras.backend as T
-import theano
-import theano.tensor as T
 
 # weights_path = "my_model_weights.h5"
 
